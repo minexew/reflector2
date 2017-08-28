@@ -1,0 +1,66 @@
+{
+  "ast": [],
+  "children": [
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "kind": "type_ref",
+                  "name": "int16_t"
+                }
+              ],
+              "kind": "field_decl",
+              "name": "level",
+              "type_string1": "int16_t"
+            },
+            {
+              "children": [
+                {
+                  "kind": "annotate_attr",
+                  "name": "interesting"
+                },
+                {
+                  "kind": "type_ref",
+                  "name": "uint64_t"
+                }
+              ],
+              "kind": "field_decl",
+              "name": "gid",
+              "type_string1": "uint64_t"
+            },
+            {
+              "children": [],
+              "kind": "field_decl",
+              "name": "flags",
+              "type_string1": "int"
+            }
+          ],
+          "kind": "struct",
+          "name": "Character"
+        },
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "kind": "type_ref",
+                  "name": "struct agdg::Character"
+                }
+              ],
+              "kind": "field_decl",
+              "name": "characters",
+              "type_string1": "std::vector<Character>"
+            }
+          ],
+          "kind": "struct",
+          "name": "SClientHello"
+        }
+      ],
+      "kind": "namespace",
+      "name": "agdg"
+    }
+  ]
+}
