@@ -15,18 +15,13 @@ Library.
 """
 
 from clang.cindex import CursorKind, Index
-from pprint import pprint
+
 
 from optparse import OptionParser, OptionGroup
 
 import cxxmodel
 
-def get_diag_info(diag):
-    return { 'severity' : diag.severity,
-             'location' : diag.location,
-             'spelling' : diag.spelling,
-             'ranges' : diag.ranges,
-             'fixits' : diag.fixits }
+
 
 def get_cursor_id(cursor, cursor_list = []):
     if not opts.showIDs:
@@ -60,47 +55,6 @@ def get_info(node, depth=0):
              'definition id' : get_cursor_id(node.get_definition()),
              'children' : children }
 
-class AstReconstructor:
-    def __init__(self):
-        self.namespace = cxxmodel.Namespace(None)
-        self.namespace_full_path = ''
-
-    def get_or_create_namespace(self, name):
-        existing = self.namespace.find_member(name, cxxmodel.Namespace)
-
-        if existing is not None: return existing
-
-        new = cxxmodel.Namespace(name)
-        self.namespace.add_member(new)
-        print('+ns', self.namespace_full_path + '::' + new.name)
-        return new
-
-    def walk_namespace_children(self, parent):
-        for node in parent.get_children():
-            if node.kind == CursorKind.NAMESPACE:
-                prev_namespace = self.namespace
-                prev_namespace_full_path = self.namespace_full_path
-
-                self.namespace = self.get_or_create_namespace(node.spelling)
-                self.namespace_full_path += '::' + self.namespace.name
-
-                self.walk_namespace_children(node)
-
-                self.namespace_full_path = prev_namespace_full_path
-                self.namespace = prev_namespace
-            elif node.kind == CursorKind.STRUCT_DECL:
-                print('struct', node.spelling)
-                struct = cxxmodel.Class(node.spelling, True)
-
-                self.walk_struct_children(struct, node)
-
-    def walk_struct_children(self, struct, parent):
-        for node in parent.get_children():
-            if node.kind == CursorKind.ANNOTATE_ATTR:
-                print('@' + node.spelling)
-                struct.add_annotation(node.spelling)
-            elif node.kind == CursorKind.FIELD_DECL:
-                print(node.spelling)
 
 def main():
     global opts

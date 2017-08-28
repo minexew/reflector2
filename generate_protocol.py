@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
 import argparse
-import json
+import clangmodel
+import cxxmodel
 
 parser = argparse.ArgumentParser(description='Process some integers.')
 '''parser.add_argument('integers', metavar='N', type=int, nargs='+',
@@ -10,13 +11,14 @@ parser.add_argument('--sum', dest='accumulate', action='store_const',
                     const=sum, default=max,
                     help='sum the integers (default: find the max)')'''
 
-parser.add_argument('model_json')
-parser.add_argument('output_hpp')
+parser.add_argument('-o', dest='output_hpp')
+parser.add_argument('source_file')
+parser.add_argument('-N', dest='namespace', default='')
+#parser.add_argument('options', nargs='*')
 
-args = parser.parse_args()
+args, unknown = parser.parse_known_args()
 
-with open(args.model_json) as f:
-    model = json.load(f)
+model = clangmodel.parse_file(args.source_file, unknown)
 
 class HppGen:
     def __init__(self, output):
@@ -24,8 +26,8 @@ class HppGen:
         self.namespaces = []
         self.output = output
 
-    def begin_class(self, name):
-        self.emit('struct %s {' % name)
+    def begin_class(self, class_):
+        self.emit('struct %s {' % class_.name)
         self.indent()
 
     def declare_field(self, name, type):
@@ -38,14 +40,15 @@ class HppGen:
     def end_class(self):
         self.unindent()
         self.emit('};')
+        self.emit()
 
     def indent(self):
         self.indent_level += 1
 
-    def push_namespace(self, ns):
-        self.namespaces = [ns] + self.namespaces
+    def push_namespace(self, ns_name):
+        self.namespaces = [ns_name] + self.namespaces
 
-        self.emit('namespace %s {' % ns)
+        self.emit('namespace %s {' % ns_name)
 
     def pop_namespace(self):
         self.namespaces = self.namespaces[1:]
@@ -59,27 +62,35 @@ class Traverser:
     def __init__(self, hpp_gen):
         self.hpp = hpp_gen
 
-    def walk_children(self, parent):
-        for node in parent['children']:
-            if node['kind'] == 'field_decl':
-                self.hpp.declare_field(node['name'], node['type_string1'])
-            elif node['kind'] == 'namespace':
-                self.hpp.push_namespace(node['name'])
+    def process_class(self, class_):
+        self.hpp.begin_class(class_)
 
-                self.walk_children(node)
+        for member in class_.members:
+            if isinstance(member, cxxmodel.Class):
+                self.process_class(member)
+            elif isinstance(member, cxxmodel.Field):
+                self.hpp.declare_field(member.name, member.type_str)
+
+        self.hpp.end_class()
+
+    def walk_namespace(self, ns):
+        for member in ns.members:
+            if isinstance(member, cxxmodel.Class):
+                #self.process_class(member)
+                pass
+            elif isinstance(member, cxxmodel.Namespace):
+                self.hpp.push_namespace(member.name)
+
+                self.walk_namespace(member)
 
                 self.hpp.pop_namespace()
-            elif node['kind'] == 'struct':
-                self.hpp.begin_class(node['name'])
-
-                self.walk_children(node)
-
-                self.hpp.end_class()
             else:
-                print('unk', node['kind'])
+                print('unk', member)
 
 with open(args.output_hpp, 'w') as hpp:
     hpp_gen = HppGen(hpp)
 
     t = Traverser(hpp_gen)
-    t.walk_children(model)
+    hpp_gen.push_namespace(args.namespace)      # FIXME: buggy is namespace==''
+    t.walk_namespace(model.find_namespace(args.namespace))
+    hpp_gen.pop_namespace()
