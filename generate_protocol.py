@@ -63,21 +63,27 @@ class Traverser:
         self.hpp = hpp_gen
 
     def process_class(self, class_):
-        self.hpp.begin_class(class_)
+        '''self.hpp.begin_class(class_)
 
         for member in class_.members:
             if isinstance(member, cxxmodel.Class):
                 self.process_class(member)
             elif isinstance(member, cxxmodel.Field):
                 self.hpp.declare_field(member.name, member.type_str)
+            else:
+                print('generate_protocol.Traverse.process_class unk kind', type(member))
 
-        self.hpp.end_class()
+        self.hpp.end_class()'''
+
+        if class_.has_annotation('agdg.protocol.message_struct'):
+            code = class_.find_constant_value('code')
+            print(class_.name, '=>', code)
 
     def walk_namespace(self, ns):
         for member in ns.members:
             if isinstance(member, cxxmodel.Class):
-                #self.process_class(member)
-                pass
+                self.process_class(member)
+                #pass
             elif isinstance(member, cxxmodel.Namespace):
                 self.hpp.push_namespace(member.name)
 
@@ -91,6 +97,6 @@ with open(args.output_hpp, 'w') as hpp:
     hpp_gen = HppGen(hpp)
 
     t = Traverser(hpp_gen)
-    hpp_gen.push_namespace(args.namespace)      # FIXME: buggy is namespace==''
+    hpp_gen.push_namespace(args.namespace)      # FIXME: buggy if namespace==''
     t.walk_namespace(model.find_namespace(args.namespace))
     hpp_gen.pop_namespace()

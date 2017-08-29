@@ -11,46 +11,62 @@ namespace agdg {
     struct SHA3_224 {};
 }
 
-#define message_id(id_) __attribute__((annotate("agdg.protocol.message_id=" #id_)))
+#define agdg_protocol_message_struct __attribute__((annotate("agdg.protocol.message_struct")))
 
 namespace agdg {
 // CLIENT -> SERVER
 
-struct message_id(1) CHello {
+struct agdg_protocol_message_struct CHello {
+    enum { code = 1 };
+
     SHA3_224 token;
 };
 
-struct message_id(2) CEnterWorld {
+struct agdg_protocol_message_struct CEnterWorld {
+    enum { code = 2 };
+
     std::string characterName;
 };
 
-struct message_id(3) CZoneLoaded {
+struct agdg_protocol_message_struct CZoneLoaded {
+    enum { code = 3 };
 };
 
-struct message_id(4) CPlayerMovement {
+struct agdg_protocol_message_struct CPlayerMovement {
+    enum { code = 4 };
+
     glm::vec3 pos;
     glm::vec3 dir;
 };
 
-struct message_id(5) CPong {
+struct agdg_protocol_message_struct CPong {
+    enum { code = 5 };
 };
 
-struct message_id(30) CChatSay {
+struct agdg_protocol_message_struct CChatSay {
+    enum { code = 30 };
+
     std::string text;
 };
 
 // SERVER -> CLIENT
 
-struct message_id(1) SHello {
+struct agdg_protocol_message_struct SHello {
+    enum { code = 1 };
+
     std::vector<std::string> characters;
 };
 
-struct message_id(2) SLoadZone {
+struct agdg_protocol_message_struct SLoadZone {
+    enum { code = 2 };
+
     std::string zoneName;
     SHA3_224 zoneRef;
 };
 
-struct message_id(3) SZoneState {
+struct agdg_protocol_message_struct SZoneState {
+    enum { code = 3 };
+
     struct Entity {
         uint32_t eid;
         uint32_t flags;
@@ -66,10 +82,13 @@ struct message_id(3) SZoneState {
     std::vector<Entity> entities;
 };
 
-struct message_id(4) SPing {
+struct agdg_protocol_message_struct SPing {
+    enum { code = 4 };
 };
 
-struct message_id(20) SEntitySpawn {
+struct agdg_protocol_message_struct SEntitySpawn {
+    enum { code = 20 };
+
     struct Entity {
         int32_t eid;
         uint32_t flags;
@@ -81,18 +100,24 @@ struct message_id(20) SEntitySpawn {
     Entity entity;
 };
 
-struct message_id(21) SEntityDespawn {
+struct agdg_protocol_message_struct SEntityDespawn {
+    enum { code = 21 };
+
     int32_t eid;
 };
 
-struct message_id(22) SEntityUpdate {
+struct agdg_protocol_message_struct SEntityUpdate {
+    enum { code = 22 };
+
     int32_t eid;
     glm::vec3 pos;
     glm::vec3 dir;
     uint32_t latency;
 };
 
-struct message_id(30) SChatSay {
+struct agdg_protocol_message_struct SChatSay {
+    enum { code = 30 };
+
     int32_t eid;
     std::string text;
     bool html;

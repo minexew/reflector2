@@ -40,6 +40,7 @@ class Field:
 
 class Class(Type):
     def __init__(self, name, is_struct=False):
+        Type.__init__(self)
         self.annotations = []
         self.is_struct = is_struct
         self.name = name
@@ -50,3 +51,24 @@ class Class(Type):
 
     def add_member(self, members):
         self.members.append(members)
+
+    def find_constant_value(self, name):
+        for member in self.members:
+            if isinstance(member, Enum) and member.is_anonymous:
+                if name in member.values:
+                    return member.values[name]
+
+        return None
+
+    def has_annotation(self, text):
+        return text in self.annotations
+
+
+class Enum(Type):
+    def __init__(self, name):
+        Type.__init__(self)
+        self.is_anonymous = not name
+        self.values = {}
+
+    def add_value(self, name, value):
+        self.values[name] = value
